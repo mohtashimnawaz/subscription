@@ -9,7 +9,7 @@ use spl_tlv_account_resolution::{
 };
 use spl_type_length_value::variable_len_pack::VariableLenPack;
 
-declare_id!("2nvwMhQodK6M2KbEphKrYz8CmHgdUwGUjifEn5cT7ndQ");
+declare_id!("5tLcC7qmenarVTNEdZ3UnDUNysdSQhhaq21ehsVtjyia");
 
 const SUBSCRIPTION_FEE: u64 = 10_000_000; // 0.01 SOL
 const SUBSCRIPTION_DURATION: i64 = 30 * 24 * 60 * 60; // 30 days in seconds
@@ -30,7 +30,7 @@ pub mod subscription {
                     Seed::Literal {
                         bytes: b"subscription".to_vec(),
                     },
-                    Seed::AccountKey { index: 0 }, // Index 0 = source_token_account (owner is the sender)
+                    Seed::AccountKey { index: 3 }, // Index 3 = owner (the sender)
                 ],
                 false, // is_signer
                 false, // is_writable
@@ -44,6 +44,14 @@ pub mod subscription {
         let extra_account_metas_info = &ctx.accounts.extra_account_meta_list.to_account_info();
         let lamports = Rent::get()?.minimum_balance(account_size);
         
+        let mint_key = ctx.accounts.mint.key();
+        let bump = ctx.bumps.extra_account_meta_list;
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"extra-account-metas",
+            mint_key.as_ref(),
+            &[bump],
+        ]];
+        
         if extra_account_metas_info.data_len() == 0 {
             // Account hasn't been initialized yet
             let cpi_accounts = Transfer {
@@ -56,22 +64,24 @@ pub mod subscription {
             
             // Allocate space
             anchor_lang::system_program::allocate(
-                CpiContext::new(
+                CpiContext::new_with_signer(
                     ctx.accounts.system_program.to_account_info(),
                     anchor_lang::system_program::Allocate {
                         account_to_allocate: extra_account_metas_info.clone(),
                     },
+                    signer_seeds,
                 ),
                 account_size as u64,
             )?;
             
             // Assign to our program
             anchor_lang::system_program::assign(
-                CpiContext::new(
+                CpiContext::new_with_signer(
                     ctx.accounts.system_program.to_account_info(),
                     anchor_lang::system_program::Assign {
                         account_to_assign: extra_account_metas_info.clone(),
                     },
+                    signer_seeds,
                 ),
                 &crate::ID,
             )?;
