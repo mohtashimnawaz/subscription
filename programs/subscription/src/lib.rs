@@ -2,12 +2,11 @@ use anchor_lang::{
     prelude::*,
     system_program::{transfer, Transfer},
 };
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
+use anchor_spl::token_interface::{Mint, TokenAccount};
 use spl_transfer_hook_interface::instruction::{ExecuteInstruction, TransferHookInstruction};
 use spl_tlv_account_resolution::{
     account::ExtraAccountMeta, seeds::Seed, state::ExtraAccountMetaList,
 };
-use spl_type_length_value::variable_len_pack::VariableLenPack;
 
 declare_id!("5tLcC7qmenarVTNEdZ3UnDUNysdSQhhaq21ehsVtjyia");
 
